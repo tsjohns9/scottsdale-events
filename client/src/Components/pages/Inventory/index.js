@@ -6,9 +6,9 @@ import CategoryComponentWrapper from './CategoryComponentWrapper';
 import SubCategoryComponentWrapper from './SubCategoryComponentWrapper';
 import InventoryComponentWrapper from './InventoryComponentWrapper';
 import Sidebar from './Sidebar';
-import { Container } from 'mdbreact';
+import { Container, Fa, Card, Row } from 'mdbreact';
 import ShowPageComponentWrapper from './ShowPageComponentWrapper';
-
+import { Link } from 'react-router-dom';
 // The main functionality of this component is to render the specified routes for the inventory
 // Similiar to App.js. It routes requests to the appropriate component, and serves as a parent component
 
@@ -69,9 +69,7 @@ class InventoryPage extends Component {
     const { categories, inventoryObj, subCategories } = this.props;
 
     const categoryImgs =
-      categories && inventoryObj
-        ? categories.map(a => inventoryObj[a][0].url)
-        : null;
+      categories && inventoryObj ? categories.map(a => inventoryObj[a][0].url) : null;
     return (
       <div className="d-lg-flex">
         <Sidebar
@@ -94,9 +92,17 @@ class InventoryPage extends Component {
                 this.setState({ totalCost: total });
               }}
             >
-              <h4 className="text-center">
-                {sessionStorage.getItem('cartTotal') && '$' + this.state.totalCost}
-              </h4>
+              <Card className="col-sm-3 col-xs-3 col-md-1  text-center">
+                <Link className="text-center" to={{ pathname: '/checkout/cart' }}>
+                  <Fa icon="shopping-cart" size="2x" className="text-center">
+                    {' '}
+                    <h4 className="text-center">
+                      {sessionStorage.getItem('cartTotal') && '$' + this.state.totalCost}
+                    </h4>
+                  </Fa>
+                </Link>
+              </Card>
+
               <Switch>
                 <Route
                   exact
@@ -113,10 +119,7 @@ class InventoryPage extends Component {
                   exact
                   path={`${this.props.match.path}/:category`}
                   render={props => (
-                    <SubCategoryComponentWrapper
-                      {...props}
-                      inventory={inventoryObj}
-                    />
+                    <SubCategoryComponentWrapper {...props} inventory={inventoryObj} />
                   )}
                 />
                 <Route
@@ -129,9 +132,7 @@ class InventoryPage extends Component {
                 <Route
                   exact
                   path={`${this.props.match.path}/:category/:subcategory/:name`}
-                  render={props => (
-                    <ShowPageComponentWrapper {...props} inventory={inventoryObj} />
-                  )}
+                  render={props => <ShowPageComponentWrapper {...props} inventory={inventoryObj} />}
                 />
               </Switch>
             </CartValueContext.Provider>
