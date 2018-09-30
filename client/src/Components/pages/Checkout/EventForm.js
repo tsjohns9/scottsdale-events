@@ -42,8 +42,9 @@ class EventForm extends Component {
 
   submitHandler = event => {
     event.preventDefault();
+
     if (this.validateForm()) {
-      return;
+      console.log('GOOOOOOO');
     }
   };
 
@@ -58,13 +59,6 @@ class EventForm extends Component {
     if (!this.state.groupName) {
       formIsValid = false;
       errors['groupName'] = '*Please enter the Group Name.';
-    }
-
-    if (typeof this.state.groupName !== 'undefined') {
-      if (!this.state.groupName.match(/^[a-zA-Z ]*$/)) {
-        formIsValid = false;
-        errors['groupName'] = '*Please enter alphabet characters only.';
-      }
     }
 
     this.setState({

@@ -4,3 +4,12 @@ a {
 .inventory-nav {
   padding-top: 0px !important;
 }
+
+.scrolling-Image {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.carousel .slide {
+  display: inline-block;
+}
