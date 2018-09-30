@@ -14,9 +14,7 @@ export default class EstimateDetails extends React.Component {
   );
 
   mapDetails = (obj, index) => {
-    const camelCase = obj
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase());
+    const camelCase = obj.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
     return (
       <tr key={index}>
         <td className="text-center">{camelCase}</td>
