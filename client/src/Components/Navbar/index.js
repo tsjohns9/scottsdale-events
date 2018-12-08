@@ -41,7 +41,6 @@ export default class Nav extends Component {
 	checkLogIn = () => (sessionStorage.getItem('token') ? true : false);
 
 	render() {
-		console.log('PROPS:', this.props);
 		const { href } = window.location;
 		if (
 			href.includes('/admin') ||
