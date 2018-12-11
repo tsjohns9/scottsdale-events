@@ -1,6 +1,11 @@
 import React, { Component, Fragment } from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-
+import {
+	BrowserRouter as Router,
+	Switch,
+	Route,
+	Redirect
+} from 'react-router-dom';
+import axios from 'axios';
 import Navbar from './Navbar';
 import Home from './pages/Home';
 import InventoryPage from './pages/Inventory';
@@ -97,6 +102,21 @@ class App extends Component {
 						{this.state.error && (
 							<p className="text-center text-danger">{this.state.error}</p>
 						)}
+						<button
+							onClick={() => {
+								axios
+									.post('/oauth')
+									.then(res => {
+										console.log('RES:', res.data.redirect);
+										window.open(res.data.redirect, '_blank');
+									})
+									.catch(err => {
+										console.log('ERR:', err);
+									});
+							}}
+						>
+							click
+						</button>
 						<Switch>
 							<Route exact path="/" component={Home} />
 							<Route

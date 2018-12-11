@@ -11,6 +11,36 @@ const dbx = new Dropbox({ accessToken: process.env.DROPBOX });
 const date = require('../util/getDate');
 const { createToken, validateToken } = require('../util/createToken');
 
+//api connection
+const QuickBooks = require('node-quickbooks');
+
+const qbo = new QuickBooks(
+	process.env.CONSUMER_KEY,
+	process.env.CONSUMER_SECRET,
+	process.env.OAUTH_TOKEN,
+	process.env.OAUTH_TOKEN_SECRET,
+	process.env.REALM_ID,
+	true, // use the sandbox?
+	true, // enable debugging?
+
+	process.env.MINOR_VERSION, // set minorversion
+	2 // set oauth version
+);
+
+router.post('/oauth', (req, res, next) => {
+	//
+	res.send({
+		redirect: `https://appcenter.intuit.com/connect/oauth2?client_id=${
+			process.env.CONSUMER_KEY
+		}&scope=com.intuit.quickbooks.accounting%20com.intuit.quickbooks.payment&redirect_uri=https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl&response_type=code&state=PlaygroundAuth`
+	});
+});
+
+qbo.findItems("where type = 'inventory'", (error, item) => {
+	if (error) console.log('error:', error);
+	else console.log('item:', item);
+});
+
 // secures admin routes
 const authAdmin = () => passport.authenticate('auth-admin', { session: false });
 
