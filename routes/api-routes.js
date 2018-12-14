@@ -10,9 +10,78 @@ const Dropbox = require('dropbox').Dropbox;
 const dbx = new Dropbox({ accessToken: process.env.DROPBOX });
 const date = require('../util/getDate');
 const { createToken, validateToken } = require('../util/createToken');
+const http = require('http');
+const QuickBooks = require('node-quickbooks');
+var Tokens = require('csrf');
+var csrf = new Tokens();
+const express = require('express');
+const app = express();
+
+QuickBooks.setOauthVersion('2.0');
+
+function generateAntiForgery(session) {
+	session.secret = csrf.secretSync();
+	return csrf.create(session.secret);
+}
+
+// app.get('/requestToken', function (req, res) {
+//   var redirecturl =
+//     QuickBooks.AUTHORIZATION_URL +
+//     '?client_id=' +
+//     consumerKey +
+//     '&redirect_uri=' +
+//     encodeURIComponent('http://localhost:' + 3001 + '/callback/') + //Make sure this path matches entry in application dashboard
+//     '&scope=com.intuit.quickbooks.accounting' +
+//     '&response_type=code' +
+//     '&state=' +
+//     generateAntiForgery(req.session);
+
+//   res.redirect(redirecturl);
+// });
+
+app.get('/callback', function(req, res) {
+	var auth = new Buffer(consumerKey + ':' + consumerSecret).toString('base64');
+
+	var postBody = {
+		url: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded',
+			Authorization: 'Basic ' + auth
+		},
+		form: {
+			grant_type: 'authorization_code',
+			code: req.query.code,
+			redirect_uri: 'http://localhost:' + 3001 + '/callback/' //Make sure this path matches entry in application dashboard
+		}
+	};
+
+	request.post(postBody, function(e, r, data) {
+		var accessToken = JSON.parse(r.body);
+
+		// save the access token somewhere on behalf of the logged in user
+		var qbo = new QuickBooks(
+			consumerKey,
+			consumerSecret,
+			accessToken.access_token /* oAuth access token */,
+			false /* no token secret for oAuth 2.0 */,
+			req.query.realmId,
+			true /* use a sandbox account */,
+			true /* turn debugging on */,
+			4 /* minor version */,
+			'2.0' /* oauth version */,
+			accessToken.refresh_token /* refresh token */
+		);
+
+		qbo.findAccounts(function(_, accounts) {
+			accounts.QueryResponse.Account.forEach(function(account) {
+				console.log(account.Name);
+			});
+		});
+	});
+});
 
 //api connection
-const QuickBooks = require('node-quickbooks');
 
 const qbo = new QuickBooks(
 	process.env.CONSUMER_KEY,
@@ -26,20 +95,6 @@ const qbo = new QuickBooks(
 	process.env.MINOR_VERSION, // set minorversion
 	2 // set oauth version
 );
-
-router.post('/oauth', (req, res, next) => {
-	//
-	res.send({
-		redirect: `https://appcenter.intuit.com/connect/oauth2?client_id=${
-			process.env.CONSUMER_KEY
-		}&scope=com.intuit.quickbooks.accounting%20com.intuit.quickbooks.payment&redirect_uri=https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl&response_type=code&state=PlaygroundAuth`
-	});
-});
-
-qbo.findItems("where type = 'inventory'", (error, item) => {
-	if (error) console.log('error:', error);
-	else console.log('item:', item);
-});
 
 // secures admin routes
 const authAdmin = () => passport.authenticate('auth-admin', { session: false });
@@ -379,7 +434,21 @@ router.post('/auth/admin', async (req, res, next) => {
 	try {
 		const result = await user.getAdmin(email, password);
 		const token = await createToken({ result }, '1w');
-		res.send({ token, user: result });
+
+		var redirecturl =
+			QuickBooks.AUTHORIZATION_URL +
+			'?client_id=' +
+			consumerKey +
+			'&redirect_uri=' +
+			encodeURIComponent('http://localhost:' + 3001 + '/callback/') + //Make sure this path matches entry in application dashboard
+			'&scope=com.intuit.quickbooks.accounting' +
+			'&response_type=code' +
+			'&state=' +
+			generateAntiForgery(req.session);
+
+		res.redirect(redirecturl);
+
+		// res.send({ token, user: result });
 	} catch (e) {
 		next(e);
 	}
